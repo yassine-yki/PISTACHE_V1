@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Suivi visuel des travaux de second oeuvre de l'etage R+2." />
+    <title>Suivi Hôtel R+2</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <dialog class="project-dialog" id="projectDialog" aria-labelledby="projectDialogTitle">
+      <div class="project-dialog-header">
+        <span class="eyebrow">Ouverture</span>
+        <h2 id="projectDialogTitle">Choisir un projet</h2>
+        <p>Les plans et les données associés seront chargés automatiquement.</p>
+      </div>
+      <div class="project-list" id="projectList"></div>
+    </dialog>
+
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="brand-mark" aria-hidden="true">R+2</div>
+        <div>
+          <h1>Suivi des chambres</h1>
+          <p id="projectSubtitle">Aucun projet ouvert</p>
+        </div>
+      </div>
+      <span class="sr-only" id="importStatus" aria-live="polite"></span>
+    </header>
+
+    <main class="app-shell">
+      <section class="workspace" aria-label="Plan interactif">
+        <div class="controlbar">
+          <label class="control-group floor-control">
+            <span class="control-label">Étage</span>
+            <select id="floorSelect" aria-label="Étage affiché">
+              <option value="r2">R+2</option>
+            </select>
+          </label>
+
+          <div class="control-group block-control" aria-label="Bloc">
+            <span class="control-label">Bloc</span>
+            <div class="segmented" id="blockTabs">
+              <button class="active" type="button" data-block="all">Tous</button>
+              <button type="button" data-block="A">A</button>
+              <button type="button" data-block="B">B</button>
+              <button type="button" data-block="C">C</button>
+            </div>
+          </div>
+
+          <div class="control-group type-control" aria-label="Type de chambre">
+            <span class="control-label">Typologie</span>
+            <div class="segmented" id="typeTabs">
+              <button class="active" type="button" data-type="all">Toutes</button>
+              <button type="button" data-type="standard">Standard</button>
+              <button type="button" data-type="junior">Junior Suite</button>
+              <button type="button" data-type="executive">Exécutive</button>
+            </div>
+          </div>
+
+          <label class="control-group room-control">
+            <span class="control-label">Chambre</span>
+            <select id="roomSelect" aria-label="Chambre sélectionnée"></select>
+          </label>
+
+          <div class="control-group zone-control" aria-label="Zone suivie">
+            <span class="control-label">Zone</span>
+            <div class="segmented" id="globalZoneTabs">
+              <button class="active" type="button" data-zone="bedroom">Chambre</button>
+              <button type="button" data-zone="loggia">Loggia</button>
+              <button type="button" data-zone="bathroom">Salle de bain</button>
+            </div>
+          </div>
+
+          <label class="control-group task-control">
+            <span class="control-label">Tâche affichée</span>
+            <select id="taskSelect" aria-label="Tâche affichée sur le plan"></select>
+          </label>
+
+          <div class="zoom-controls" aria-label="Zoom du plan">
+            <button id="zoomOut" type="button" title="Réduire le plan" aria-label="Réduire le plan">−</button>
+            <input id="zoomRange" type="range" min="10" max="400" step="10" value="100" aria-label="Niveau de zoom" />
+            <output id="zoomValue">100 %</output>
+            <button id="zoomIn" type="button" title="Agrandir le plan" aria-label="Agrandir le plan">+</button>
+            <button id="fitPlan" class="fit-plan" type="button" title="Afficher le plan entier">Ajuster</button>
+          </div>
+        </div>
+
+        <div class="summary-strip" id="summaryStrip" aria-live="polite"></div>
+
+        <div class="plan-viewport" id="planViewport">
+          <div class="plan-content" id="planContent">
+            <div class="plan-empty" id="planEmpty">Importez le plan DXF pour commencer.</div>
+            <svg class="dxf-plan" id="dxfPlan" role="img" aria-label="Plan architectural importé depuis le fichier DXF"></svg>
+          </div>
+        </div>
+      </section>
+
+      <aside class="detail-panel" aria-label="Détail de la chambre">
+        <div class="room-heading">
+          <div>
+            <span class="eyebrow">Chambre sélectionnée</span>
+            <h2 id="roomTitle">Chambre 203</h2>
+          </div>
+          <span class="room-type" id="roomType">Junior Suite</span>
+        </div>
+
+        <div class="segmented detail-tabs" id="detailZoneTabs" aria-label="Zone de la chambre">
+          <button class="active" type="button" data-zone="bedroom">Chambre</button>
+          <button type="button" data-zone="loggia">Loggia</button>
+          <button type="button" data-zone="bathroom">Salle de bain</button>
+        </div>
+
+        <label class="task-search">
+          <span class="sr-only">Rechercher une tâche</span>
+          <input id="taskSearch" type="search" placeholder="Rechercher une tâche" autocomplete="off" />
+        </label>
+
+        <div class="task-list" id="taskList"></div>
+
+        <section class="task-editor" id="taskEditor" aria-live="polite">
+          <div class="editor-heading">
+            <div>
+              <span class="eyebrow">Mise à jour</span>
+              <h3 id="editorTaskTitle">Étanchéité SDB</h3>
+            </div>
+            <output class="percent-output" id="percentOutput">0 %</output>
+          </div>
+
+          <div class="task-lock" id="taskLock" hidden>
+            <strong>Tâche terminée</strong>
+            <span>Les modifications sont verrouillées.</span>
+          </div>
+
+          <button class="correction-trigger" id="correctionTrigger" type="button" hidden>Signaler une correction</button>
+
+          <div class="correction-panel" id="correctionPanel" hidden>
+            <label class="field">
+              <span>Motif obligatoire</span>
+              <select id="correctionReason">
+                <option value="">Choisir un motif</option>
+                <option value="input-error">Erreur de saisie</option>
+                <option value="scope-change">Élément oublié ou ajouté</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Explication</span>
+              <textarea id="correctionNote" rows="2" placeholder="Décrire précisément la correction..."></textarea>
+            </label>
+            <p class="form-message error" id="correctionError" hidden></p>
+            <div class="correction-actions">
+              <button class="button" id="authorizeCorrection" type="button">Autoriser la correction</button>
+              <button class="button secondary" id="cancelCorrection" type="button">Annuler</button>
+            </div>
+          </div>
+
+          <div class="correction-authorized" id="correctionAuthorized" hidden></div>
+          <div class="correction-history" id="correctionHistory" hidden></div>
+          <p class="form-message" id="progressRuleMessage" hidden></p>
+
+          <div class="progress-entry">
+            <input id="progressRange" class="progress-range" type="range" min="0" max="100" step="1" value="0" aria-label="Pourcentage d'avancement" />
+            <label class="percent-input-wrap">
+              <span class="sr-only">Saisir le pourcentage</span>
+              <input id="percentInput" type="number" min="0" max="100" step="1" value="0" inputmode="numeric" aria-label="Saisir le pourcentage" />
+              <span>%</span>
+            </label>
+          </div>
+          <div class="quick-progress" aria-label="Avancement rapide">
+            <button type="button" data-progress="0">0 %</button>
+            <button type="button" data-progress="25">25 %</button>
+            <button type="button" data-progress="50">50 %</button>
+            <button type="button" data-progress="75">75 %</button>
+            <button type="button" data-progress="100">100 %</button>
+          </div>
+
+          <label class="blocked-toggle">
+            <input type="checkbox" id="blockedInput" />
+            <span>Tâche bloquée</span>
+          </label>
+
+          <label class="field">
+            <span>Blocage ou observation</span>
+            <textarea id="noteInput" rows="3" placeholder="Ex. attente de validation, manque de matériau..."></textarea>
+          </label>
+
+          <details class="planning-details">
+            <summary>Planification facultative</summary>
+            <div class="date-grid">
+              <label class="field">
+                <span>Début prévu</span>
+                <input type="date" id="startDateInput" />
+              </label>
+              <label class="field">
+                <span>Fin prévue</span>
+                <input type="date" id="endDateInput" />
+              </label>
+            </div>
+          </details>
+        </section>
+      </aside>
+    </main>
+
+    <script src="/vendor/dxf-parser.js"></script>
+    <script type="module" src="/src/app.js"></script>
+  </body>
+</html>
